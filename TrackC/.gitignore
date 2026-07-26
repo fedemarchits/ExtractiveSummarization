@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+results/**/*.jsonl
+results/**/*.jsonl.partial
+data/cache/
+data/silver/*.parquet
+.DS_Store
