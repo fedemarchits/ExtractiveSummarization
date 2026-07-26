@@ -1,0 +1,112 @@
+# # Which technique x variant cells run. "all" = the 4-cell full grid.
+# # Restrict per technique with an explicit list of {shot, cap} pairs.
+# # Techniques not listed default to the full grid.
+
+techniques:
+  vanilla: all
+  least_to_most: all
+  simulated_tool_augmented: all
+  self_ask: all
+  chain_of_thought: all
+  explanation_based: all
+  salience_inference: all
+  self_critique: all
+  contrastive_joint: all
+
+  tool_augmented:
+    - shot: zero_shot
+      cap: capped
+
+  tool_no_meta:
+    - shot: zero_shot
+      cap: capped
+
+  tool_no_roleplay:
+    - shot: zero_shot
+      cap: capped
+
+  scoring_based:
+    - shot: zero_shot
+      cap: uncapped
+
+  scoring_no_length:
+    - shot: zero_shot
+      cap: uncapped
+
+  scoring_no_redundancy:
+    - shot: zero_shot
+      cap: uncapped
+
+  negative_aware:
+    - shot: one_shot
+      cap: uncapped
+    - shot: one_shot
+      cap: capped
+
+  chain_of_thought_trace:
+    - shot: one_shot
+      cap: uncapped
+    - shot: one_shot
+      cap: capped
+
+  self_ask_trace:
+    - shot: one_shot
+      cap: uncapped
+    - shot: one_shot
+      cap: capped
+
+  scoring_based_trace:
+    - shot: one_shot
+      cap: uncapped
+    - shot: one_shot
+      cap: capped
+
+  salience_inference_trace:
+    - shot: one_shot
+      cap: uncapped
+    - shot: one_shot
+      cap: capped
+
+# techniques:
+#   # 9 existing — full grid
+#   vanilla: all
+#   least_to_most: all
+#   tool_augmented: all
+#   simulated_tool_augmented: all
+#   scoring_based: all
+#   self_ask: all
+#   chain_of_thought: all
+#   explanation_based: all
+#   salience_inference: all
+
+#   tool_augmented:
+#     shots: [zero]
+#     caps: [capped]
+
+#   tool_no_meta:
+#     shots: [zero]
+#     caps: [capped]
+
+#   tool_no_roleplay:
+#     shots: [zero]
+#     caps: [capped]
+
+#   scoring_based:
+#     shots: [zero]
+#     caps: [uncapped]
+
+#   scoring_no_length:
+#     shots: [zero]
+#     caps: [uncapped]
+
+#   scoring_no_redundancy:
+#     shots: [zero]
+#     caps: [uncapped]
+
+#   # 3 new
+#   self_critique: all          # zero_shot = critique; one_shot = self_refinement
+#   contrastive_joint: all      # zero_shot = contrastive; one_shot = joint_self_ask
+#   negative_aware:             # one-shot only by nature
+#     - {shot: one_shot, cap: uncapped}
+#     - {shot: one_shot, cap: capped}
+  

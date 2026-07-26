@@ -1,0 +1,17 @@
+{ "best_heuristic": "local_score", 
+"selection_metric": "rouge_avg", 
+"best_k": 6,
+ "grid_k_min": 1, 
+ "grid_k_max": 32, 
+ "beam_size": 4, 
+ "extract_metric": "rouge1", 
+ "mode": "singular", 
+ "scores": {
+   "rouge1_f1": 0.6514, 
+   "rouge2_f1": 0.5688, 
+   "rougeL_f1": 0.4871, 
+   "rouge_avg": 0.5691 } }
+
+
+
+ 

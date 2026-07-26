@@ -1,0 +1,80 @@
+# Model grid for a RENTED GPU box (vast.ai), selected with:
+#   python run.py --model <alias> --models configs/models.vast.yaml
+#
+# Difference vs configs/models.yaml (the 3090 cluster): the rented instance has a
+# recent driver, so it runs the modern vLLM that supports gemma-4 / qwen-3.5. All
+# local tiers use backend: vllm at full bf16 (no quantization) -> fast AND
+# precision-comparable across the whole size grid. Endpoint tiers are unchanged.
+#
+# Sizing: bf16 12B needs a >=40GB card (A100 40GB / L40S / A6000 48GB). On a 24GB
+# card, add `quantization: bitsandbytes` to gemma4_12b (reintroduces a quant
+# confound — prefer the bigger card).
+
+tiers: [small, small_medium, medium, large]
+
+_vllm_defaults: &vllm_defaults
+  backend: vllm
+  tensor_parallel_size: 1
+  max_model_len: 8192          # our prompts are ~2-4k tokens; bounds KV cache
+  gpu_memory_utilization: 0.90
+
+models:
+  # --- Qwen3.5 ---
+  - alias: qwen35_2b
+    hf_id: Qwen/Qwen3.5-2B
+    family: qwen35
+    tier: small
+    <<: *vllm_defaults
+
+  - alias: qwen35_4b
+    hf_id: Qwen/Qwen3.5-4B
+    family: qwen35
+    tier: small_medium
+    <<: *vllm_defaults
+
+  - alias: qwen35_9b
+    hf_id: Qwen/Qwen3.5-9B
+    family: qwen35
+    tier: medium
+    <<: *vllm_defaults
+
+  - alias: qwen35_27b
+    hf_id: Qwen/Qwen3.5-27B
+    family: qwen35
+    tier: large
+    backend: endpoint
+    endpoint_model: qwen/qwen3.5-27b     # TODO: confirm exact slug on OpenRouter
+
+  # --- Gemma 4 ---
+  - alias: gemma4_e2b
+    hf_id: google/gemma-4-E2B-it
+    family: gemma4
+    tier: small
+    <<: *vllm_defaults
+
+  - alias: gemma4_e4b
+    hf_id: google/gemma-4-E4B-it
+    family: gemma4
+    tier: small_medium
+    <<: *vllm_defaults
+
+  - alias: gemma4_12b
+    hf_id: google/gemma-4-12B-it
+    family: gemma4
+    tier: medium
+    <<: *vllm_defaults        # full bf16 on a >=40GB card
+
+  - alias: gemma4_31b
+    hf_id: google/gemma-4-31B-it
+    family: gemma4
+    tier: large
+    backend: endpoint
+    endpoint_model: google/gemma-4-31b-it   # TODO: confirm exact slug on OpenRouter
+
+  # --- Reference model (rationale traces only; not part of the scaling grid) ---
+  - alias: qwen35_397b
+    hf_id: Qwen/Qwen3.5-397B-A17B
+    family: qwen35
+    tier: reference
+    backend: endpoint
+    endpoint_model: qwen/qwen3.5-397b-a17b  # OpenRouter slug (verified 2026-07)
