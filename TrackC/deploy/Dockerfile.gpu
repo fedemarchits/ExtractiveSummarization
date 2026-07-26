@@ -1,0 +1,26 @@
+# Track C GPU image. Same base as Track A (Prompting/deploy/Dockerfile.gpu):
+# torch 2.5.1 + CUDA 12.1 + cuDNN 9 + Python 3.11. Installs TrackC/requirements.txt.
+FROM pytorch/pytorch:2.5.1-cuda12.1-cudnn9-runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git curl wget \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir packaging ninja wheel setuptools
+
+# Install python deps (torch already in base image -> strip it out). This pulls
+# the analysis-suite deps too (pandas, pyarrow, scipy, scikit-learn, matplotlib,
+# moverscore, nltk) so the same image runs both the benchmark and analysis/run_all.
+COPY requirements.txt /tmp/requirements.txt
+RUN grep -ivE '^(torch|torchvision|torchaudio)' /tmp/requirements.txt > /tmp/req_clean.txt \
+    && pip install --no-cache-dir -r /tmp/req_clean.txt
+
+# Pre-fetch NLTK sentence-tokenizer data (silver generation needs punkt).
+RUN python -c "import nltk; nltk.download('punkt', quiet=True); nltk.download('punkt_tab', quiet=True)"
+
+WORKDIR /workspace
