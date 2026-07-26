@@ -1,0 +1,21 @@
+{
+  "technique": "salience_inference",
+  "aspect": "summary",
+  "source_model": "qwen/qwen3.5-397b-a17b",
+  "exemplar_sentences": [
+    "16 May 2016 Last updated at 08:42 BST Merafield Bridge in Plympton was detonated overnight on Saturday, as part of a Â£6.4m project to replace the structure.",
+    "The bridge, built in 1969, was damaged by alkali silica reaction, more commonly known as \"concrete cancer\".",
+    "Video: Highways England"
+  ],
+  "shown_indices": [
+    1,
+    2
+  ],
+  "gold_indices": [
+    1,
+    2,
+    3
+  ],
+  "f1": 0.8,
+  "rationale": "Sentence 1 establishes the core event (the demolition of Merafield Bridge), including the date, location, and project cost, serving as the primary news hook. Sentence 2 provides essential context regarding the cause of the demolition (structural damage from \"concrete cancer\") and the bridge's history, which is critical for understanding the \"why.\" Sentence 3 is merely a media credit (\"Video: Highways England\") and contains no narrative information relevant to the story's substance; therefore, it is excluded from a concise summary."
+}

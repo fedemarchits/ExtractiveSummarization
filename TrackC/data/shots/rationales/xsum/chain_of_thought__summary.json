@@ -1,0 +1,21 @@
+{
+  "technique": "chain_of_thought",
+  "aspect": "summary",
+  "source_model": "qwen/qwen3.5-397b-a17b",
+  "exemplar_sentences": [
+    "16 May 2016 Last updated at 08:42 BST Merafield Bridge in Plympton was detonated overnight on Saturday, as part of a Â£6.4m project to replace the structure.",
+    "The bridge, built in 1969, was damaged by alkali silica reaction, more commonly known as \"concrete cancer\".",
+    "Video: Highways England"
+  ],
+  "shown_indices": [
+    1,
+    2
+  ],
+  "gold_indices": [
+    1,
+    2,
+    3
+  ],
+  "f1": 0.8,
+  "rationale": "The document's central topic is the demolition of Merafield Bridge due to structural damage. Sentence 1 provides the core event (detonation), location, date, and project cost. Sentence 2 adds essential context regarding the bridge's age and the specific cause of failure (\"concrete cancer\"). Sentence 3 is a media attribution (\"Video: Highways England\") rather than a factual statement contributing to the narrative summary; it is redundant in a text-only extractive summary of the event itself. Therefore, only sentences 1 and 2 are essential."
+}

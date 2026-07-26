@@ -1,0 +1,39 @@
+{
+  "technique": "self_ask",
+  "aspect": "summary",
+  "source_model": "qwen/qwen3.5-397b-a17b",
+  "exemplar_sentences": [
+    "In the year to October 2015, 135 transgender hate offences were recorded, compared with 108 last year.",
+    "The Met said the rise was partly explained by more people reporting such crimes, and urged any victims of transphobia to come forward.",
+    "One London-based LGBT charity said the real number of offences was higher.",
+    "The Met figures also show that homophobic crime has risen by 21% - from 1,421 offences in 2014 to 1,724 in 2015.",
+    "Melanie Stray, from LGBT charity Galop, told the BBC this type of crime was still being underreported.",
+    "She said: \"The figures that are being reported in London in a year, we have clients that experience that themselves in a year.",
+    "\"I think it's the everyday stuff that happens - people couldn't report all of it because they'd spend their lives speaking to the police.\"",
+    "Commander Mark Chishty from the Met stressed the need for victims to contact the police in every instance, saying: \"However mundane you think it is, it's very serious to us.",
+    "\"It's important that we tackle this so we start curbing this type of behaviour within society - it's not tolerable, it's not part of our values and we want to deal with it.\"",
+    "The Met recently formed a special hate crime senior partnership group between the police and community representatives, working alongside its dedicated LGBT Liaison Officers."
+  ],
+  "shown_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "gold_indices": [
+    1,
+    2,
+    4,
+    6,
+    8,
+    10
+  ],
+  "f1": 0.7499999999999999,
+  "rationale": "Sentence 1 provides the core statistic on transgender hate crimes, which is essential. Sentence 2 offers the police explanation for the rise and a call to action, adding necessary context. Sentence 3 introduces the critical perspective that official figures are an undercount, a key theme. Sentence 4 adds specific data on homophobic crimes, broadening the scope of the report. Sentence 5 identifies the expert source (Melanie Stray) validating the underreporting claim. Sentence 6 provides a specific, impactful quote illustrating the scale of underreporting. Sentence 7 explains the reasoning behind underreporting (frequency/triviality), which is vital context. Sentence 8 contains the police commander's direct appeal to victims, reinforcing the official stance. Sentence 9 articulates the moral imperative and societal values driving the police response. Sentence 10 details concrete institutional actions taken, rounding out the narrative. Removing any of these would result in the loss of specific data, expert testimony, explanatory context, or institutional response details not fully covered by other sentences."
+}

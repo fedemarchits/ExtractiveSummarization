@@ -1,0 +1,22 @@
+{
+  "technique": "scoring_based",
+  "aspect": "summary",
+  "source_model": "qwen/qwen3.5-397b-a17b",
+  "exemplar_sentences": [
+    "16 May 2016 Last updated at 08:42 BST Merafield Bridge in Plympton was detonated overnight on Saturday, as part of a Â£6.4m project to replace the structure.",
+    "The bridge, built in 1969, was damaged by alkali silica reaction, more commonly known as \"concrete cancer\".",
+    "Video: Highways England"
+  ],
+  "shown_indices": [
+    1,
+    2,
+    3
+  ],
+  "gold_indices": [
+    1,
+    2,
+    3
+  ],
+  "f1": 1.0,
+  "rationale": "Sentence 1 is essential (score 5) as it provides the core news event: the demolition of Merafield Bridge, including the date, location, and project cost. Sentence 2 is useful (score 4) because it explains the critical reason for the demolition (structural damage from \"concrete cancer\") and provides historical context (built in 1969). Sentence 3 is minor (score 2) as it is merely a media credit indicating the source of a video, offering no narrative information about the event itself. No sentences are redundant."
+}
