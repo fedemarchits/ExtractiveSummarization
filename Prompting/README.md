@@ -45,7 +45,9 @@ Orthogonal wrappers (not variants): `self_consistency` (majority vote),
 - [x] TRAIN-median K capping
 - [x] orthogonal wrappers: `self_consistency`, `dynamic_llm_capper` (config-toggled)
 - [x] HF model ids verified on the Hub (`configs/models.yaml`)
-- [ ] endpoint access for large tiers (env: OPENAI_BASE_URL / OPENAI_API_KEY) — set on server
+- [x] endpoint access for large tiers (env: OPENAI_BASE_URL / OPENAI_API_KEY)
+- [x] large-tier partial run: `qwen35_27b` + `gemma4_31b`, 5 best techniques (OpenRouter, ~$10)
+- [ ] large-tier full grid (remaining 11 techniques, needs more endpoint credit)
 - [ ] server run (GPU) + full pytest with deps installed
 
 ## Results so far
@@ -53,8 +55,11 @@ Orthogonal wrappers (not variants): `self_consistency` (majority vote),
 Aggregated from `results/summary.csv` (one row per model × variant × aspect).
 Metrics: per-sentence **F1 / P / R** on selected indices, **ROUGE-L** of the built
 summary, **oracle gap** (ROUGE-L below the best achievable selection; lower is
-better). `6 / 8` grid models are done; the two largest are endpoint-only and not
-yet run.
+better). Aspect means include the per-doc `union` selection alongside the three
+aspects. **All 8 grid models now have results**; the two largest (`qwen35_27b`,
+`gemma4_31b`) are endpoint-only and were run on a **partial grid — the 5 best
+techniques only** (budget-limited endpoint run, see
+[§ Large tier](#large-tier--partial-run-5-best-techniques)).
 
 ### Where each model was computed
 
@@ -66,18 +71,28 @@ yet run.
 | `gemma4_e2b` | RTX 3090 (faretra)        | HF transformers | bf16      | ✅ done       |
 | `gemma4_e4b` | A100 40GB (vast.ai)       | **vLLM**        | bf16      | ✅ done       |
 | `gemma4_12b` | A100 40GB (vast.ai)       | **vLLM**        | bf16      | ✅ done       |
-| `qwen35_27b` | — (endpoint / OpenRouter) | endpoint        | full      | ❌ to compute |
-| `gemma4_31b` | — (endpoint / OpenRouter) | endpoint        | full      | ❌ to compute |
+| `qwen35_27b` | — (endpoint / OpenRouter) | endpoint        | full      | ⚠️ partial (5 tech) |
+| `gemma4_31b` | — (endpoint / OpenRouter) | endpoint        | full      | ⚠️ partial (5 tech) |
 
 gemma-4 is too new for the CUDA-12 cluster's vLLM, so `9b / e4b / 12b` were run
-on a rented A100 (CUDA-13 → modern vLLM). All six are bf16, so quality is
-comparable; **latency is not** (vLLM batches, HF does not).
+on a rented A100 (CUDA-13 → modern vLLM). All six local models are bf16, so
+quality is comparable; **latency is not** (vLLM batches, HF does not; the endpoint
+latency is round-trip wall-time, not compute).
+
+The two large models were served via **OpenRouter** (`qwen/qwen3.5-27b`,
+`google/gemma-4-31b-it`) at full precision, on a ~$10 budget that covered only the
+**5 best techniques** (18 of 54 variants each). See
+[§ Large tier](#large-tier--partial-run-5-best-techniques).
 
 ### Prompt variants computed (per model)
 
 Each technique × **shot** (`zero`/`one`) × **cap** (`capped`/`uncapped`) — the
 4-cell grid, except `negative_aware` and the `_trace` ablations (one-shot only).
-**54 variants per model.**
+**54 variants per model** — for the **6 local models**. The **2 large endpoint
+models ran a partial grid: the 5 best techniques only = 18 variants each**
+(`self_ask`, `salience_inference`, `self_critique`, `contrastive_joint`,
+`negative_aware`; no `_trace` ablations). The full 54-cell grid is preserved in
+`configs/grid.full.yaml`; the active partial grid is `configs/grid.yaml`.
 
 | Technique                | zero·cap | zero·unc | one·cap | one·unc |
 | ------------------------ | :------: | :------: | :-----: | :-----: |
@@ -111,8 +126,12 @@ not a cross-model comparison).
 | `gemma4_e2b` | 0.567 |   0.626   | 0.570  |  0.185  |   0.216    |    3.51     |
 | `gemma4_e4b` | 0.611 |   0.647   | 0.639  |  0.179  |   0.222    |    0.43     |
 | `gemma4_12b` | 0.631 |   0.642   | 0.681  |  0.179  |   0.222    |    1.18     |
-| `qwen35_27b` |   ✗   |     ✗     |   ✗    |    ✗    |     ✗      |      ✗      |
-| `gemma4_31b` |   ✗   |     ✗     |   ✗    |    ✗    |     ✗      |      ✗      |
+| `qwen35_27b` |  †    |     †     |   †    |    †    |     †      |      †      |
+| `gemma4_31b` |  †    |     †     |   †    |    †    |     †      |      †      |
+
+† Large models ran only the 5 best techniques, so a 54-variant mean isn't
+comparable — see [§ Large tier](#large-tier--partial-run-5-best-techniques) for
+their stats and a like-for-like 5-technique comparison across all 8 models.
 
 ### Comparison 1 — capped vs. uncapped (per model)
 
@@ -183,12 +202,63 @@ Rationale exemplars help most models slightly (largest gain on `gemma4_e2b`), bu
 the effect is small and not universal — no gain on the weakest (`2b`) or the
 largest (`12b`).
 
+### Large tier — partial run (5 best techniques)
+
+The large tier is endpoint-only (OpenRouter, full precision). A ~$10 credit budget
+covered the **5 best techniques by mean F1** — `self_ask`, `salience_inference`,
+`self_critique`, `contrastive_joint`, `negative_aware` — i.e. **18 of 54 variants
+each** (no `_trace` ablations). Both models completed all 18 with zero errors
+(100 test docs × 3 aspects per variant).
+
+**Full stats for the two large models** (mean over their 18 variants; incl. `union`):
+
+| Model        |  F1   | Precision | Recall | ROUGE-L | Oracle gap | Latency (s)\* |
+| ------------ | :---: | :-------: | :----: | :-----: | :--------: | :-----------: |
+| `qwen35_27b` | 0.633 |   0.645   | 0.688  |  0.178  |   0.222    |     7.88      |
+| `gemma4_31b` | 0.641 |   0.655   | 0.684  |  0.181  |   0.220    |     9.96      |
+
+\* Endpoint round-trip wall-time (queueing + network), **not** compute — not
+comparable to the local vLLM/HF latencies above.
+
+**Like-for-like scaling** — mean F1 on the **same 5 techniques**, all 8 models, so
+the large tier is directly comparable to the smaller ones:
+
+| Tier        | Qwen3.5 model |  F1   | Gemma4 model |  F1   |
+| ----------- | ------------- | :---: | ------------ | :---: |
+| small       | `qwen35_2b`   | 0.472 | `gemma4_e2b` | 0.571 |
+| small·med   | `qwen35_4b`   | 0.612 | `gemma4_e4b` | 0.629 |
+| medium      | `qwen35_9b`   | 0.625 | `gemma4_12b` | 0.633 |
+| **large**   | `qwen35_27b`  | **0.633** | `gemma4_31b` | **0.641** |
+
+**Scaling is monotonic in both families** — every size step gains F1, no
+inversions. Gemma4 leads Qwen3.5 at every tier. Returns diminish sharply past the
+medium tier: Qwen `9b→27b` is **+0.008**, Gemma `12b→31b` is **+0.008**, vs the
+huge low-end jump (Qwen `2b→4b` = +0.140). The extra parameters and full precision
+of the large tier buy very little on this extractive task.
+
+The two earlier per-model patterns **hold at the large tier** (5-technique means):
+
+- **Capped vs. uncapped** — F1 flat/slightly higher uncapped (`27b` 0.628→0.639,
+  `31b` 0.631→0.650), but **ROUGE-L clearly better capped** (`27b` 0.192 vs 0.164,
+  `31b` 0.193 vs 0.169). Same story as the local models.
+- **Zero- vs. one-shot** — one-shot ≥ zero-shot (`27b` 0.630→0.636, `31b`
+  0.630→0.649), consistent with "exemplars help as size grows."
+
 ### Still to compute
 
-`qwen35_27b` and `gemma4_31b` — the large tier, endpoint-only (need a hosted
-gemma-4 / qwen-3.5 slug + API credit). Everything else is done.
+- **Large-tier full grid** — the remaining 11 techniques (incl. `_trace`
+  ablations) for `qwen35_27b` / `gemma4_31b`; needs more endpoint credit. Restore
+  `configs/grid.full.yaml` when funded.
+- **Raw `.jsonl` for `gemma4_e2b`, `qwen35_2b`, `qwen35_4b`** — computed on the
+  vast.ai box; only their aggregated `summary.csv` rows were synced back. Pull the
+  raw per-doc files before the instance is destroyed if error-analysis is needed.
 
-### Top 5 prompts (mean F1 over all 6 models)
+### Top 5 prompts (mean F1 over the 6 local models)
+
+This ranking is what **selected the 5 techniques** run on the large tier (the
+`_trace` winners collapse to their base technique, since no `_trace` was run on
+the endpoint models): `self_ask`, `salience_inference`, `self_critique`,
+`contrastive_joint`, `negative_aware`.
 
 | Rank | Technique                  |  F1   | Precision | Recall | ROUGE-L |
 | :--: | -------------------------- | :---: | :-------: | :----: | :-----: |

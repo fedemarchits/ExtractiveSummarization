@@ -1,0 +1,5 @@
+{
+  "variant": "salience_inference__zero_shot__capped",
+  "mean_latency_s": 6.352548996639989,
+  "n_docs": 100
+}

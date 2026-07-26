@@ -1,0 +1,22 @@
+# Which technique x variant cells run. "all" = the 4-cell full grid.
+# Restrict per technique with an explicit list of {shot, cap} pairs.
+# Techniques not listed default to the full grid.
+
+techniques:
+  # 9 existing — full grid
+  vanilla: all
+  least_to_most: all
+  tool_augmented: all
+  simulated_tool_augmented: all
+  scoring_based: all
+  self_ask: all
+  chain_of_thought: all
+  explanation_based: all
+  salience_inference: all
+
+  # 3 new
+  self_critique: all          # zero_shot = critique; one_shot = self_refinement
+  contrastive_joint: all      # zero_shot = contrastive; one_shot = joint_self_ask
+  negative_aware:             # one-shot only by nature
+    - {shot: one_shot, cap: uncapped}
+    - {shot: one_shot, cap: capped}

@@ -1,0 +1,5 @@
+{
+  "variant": "self_ask__one_shot__capped",
+  "mean_latency_s": 6.8981407966399635,
+  "n_docs": 100
+}

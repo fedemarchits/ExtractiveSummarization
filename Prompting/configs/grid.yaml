@@ -1,22 +1,29 @@
-# Which technique x variant cells run. "all" = the 4-cell full grid.
-# Restrict per technique with an explicit list of {shot, cap} pairs.
-# Techniques not listed default to the full grid.
+# PARTIAL RUN (2026-07): only the 5 best techniques by mean test-F1, on the two
+# largest endpoint models (qwen35_27b, gemma4_31b), to fit a ~$10 OpenRouter budget.
+# Full 12-technique grid is preserved in grid.full.yaml — restore when funded.
+#
+# NOTE: engine/grid.py defaults ABSENT techniques to "all", so dropped techniques
+# must be explicitly zeroed ([]) here, not just omitted.
 
 techniques:
-  # 9 existing — full grid
-  vanilla: all
-  least_to_most: all
-  tool_augmented: all
-  simulated_tool_augmented: all
-  scoring_based: all
+  # --- ACTIVE: 5 best by mean test-F1 ---
   self_ask: all
-  chain_of_thought: all
-  explanation_based: all
   salience_inference: all
-
-  # 3 new
   self_critique: all          # zero_shot = critique; one_shot = self_refinement
   contrastive_joint: all      # zero_shot = contrastive; one_shot = joint_self_ask
   negative_aware:             # one-shot only by nature
     - {shot: one_shot, cap: uncapped}
     - {shot: one_shot, cap: capped}
+
+  # --- DISABLED for the partial run (zeroed so absent-default can't re-enable) ---
+  vanilla: []
+  least_to_most: []
+  tool_augmented: []
+  simulated_tool_augmented: []
+  scoring_based: []
+  chain_of_thought: []
+  explanation_based: []
+  self_ask_trace: []
+  salience_inference_trace: []
+  scoring_based_trace: []
+  chain_of_thought_trace: []

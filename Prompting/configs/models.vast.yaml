@@ -43,7 +43,7 @@ models:
     family: qwen35
     tier: large
     backend: endpoint
-    endpoint_model: qwen/qwen3.5-27b     # TODO: confirm exact slug on OpenRouter
+    endpoint_model: qwen/qwen3.5-27b     # confirmed on OpenRouter 2026-07 (in $0.195/M, out $1.56/M)
 
   # --- Gemma 4 ---
   - alias: gemma4_e2b
@@ -69,7 +69,7 @@ models:
     family: gemma4
     tier: large
     backend: endpoint
-    endpoint_model: google/gemma-4-31b-it   # TODO: confirm exact slug on OpenRouter
+    endpoint_model: google/gemma-4-31b-it   # confirmed on OpenRouter 2026-07 (in $0.140/M, out $0.400/M); :free tier 429s upstream
 
   # --- Reference model (rationale traces only; not part of the scaling grid) ---
   - alias: qwen35_397b
