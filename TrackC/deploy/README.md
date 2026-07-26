@@ -25,11 +25,13 @@ Two datasets, each needing two silver splits (4 files total):
 cd TrackC
 HF_TOKEN=hf_xxx bash deploy/vast_setup.sh          # deps + modern vllm + nltk
 
-# validate the whole pipeline FAST on a subsample first:
-MODEL=qwen35_9b DATASET=xsum MAX_DOCS=500 bash deploy/run.sh
+# one model, random 100 docs (seeded -> same 100 for every model):
+MODEL=qwen35_9b DATASET=xsum MAX_DOCS=100 SEED=42 bash deploy/run.sh
 ```
 `run.sh` auto-generates the silver splits if missing, runs preflight, then the
-benchmark. Drop `MAX_DOCS` for the full ~11k-doc test set (days per model).
+benchmark. `MAX_DOCS` + `SEED` take a **reproducible random subsample** (silver is
+generated once, so all models evaluate the identical 100). Drop `MAX_DOCS` for the
+full ~11k-doc test set (days per model).
 
 ## Path B — Docker
 ```bash
@@ -38,8 +40,11 @@ docker build -f deploy/Dockerfile.gpu -t trackc-gpu:latest .
 MODEL=qwen35_9b DATASET=xsum MAX_DOCS=500 bash deploy/run_docker.sh
 ```
 
-## The 6 local models (resume-safe; one at a time on one A100)
+## The 6 local models on a random 100 (resume-safe; one at a time on one A100)
+Big/endpoint tiers (`qwen35_27b`, `gemma4_31b`, `qwen35_397b`) are intentionally
+excluded — this loop is the 6 local models only, on the same random 100 docs.
 ```bash
+export MAX_DOCS=100 SEED=42        # random 100, identical across all models
 for M in qwen35_2b qwen35_4b qwen35_9b gemma4_e2b gemma4_e4b gemma4_12b; do
   MODEL=$M DATASET=xsum  bash deploy/run.sh
   MODEL=$M DATASET=cnndm bash deploy/run.sh
@@ -47,6 +52,7 @@ done
 ```
 `--models configs/models.vast.yaml` (the default in `run.sh`) puts every local
 tier on **vllm** — do not fall back to `configs/models.yaml` (HF, ~3-4 s/doc).
+At 100 docs this whole sweep is well under an hour of GPU time total.
 
 ## Trace variants (`*_trace`)
 The grid includes 4 `_trace` variants that need a prebuilt rationale cache from

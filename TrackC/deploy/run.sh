@@ -36,15 +36,20 @@ case "$DATASET" in
   *) echo "DATASET must be xsum or cnndm, got '$DATASET'"; exit 2;;
 esac
 
+# Random subsample: with MAX_DOCS set, take a reproducible random sample (SEED,
+# default 42) so all models see the SAME documents. Unset MAX_DOCS = full split.
+SEED="${SEED:-42}"
 MAXDOCS_ARG=""
-[ -n "$MAX_DOCS" ] && MAXDOCS_ARG="--max-docs $MAX_DOCS"
+if [ -n "$MAX_DOCS" ]; then
+    MAXDOCS_ARG="--max-docs $MAX_DOCS --seed $SEED"
+fi
 
 echo "=============================="
 echo "Track C run"
 echo "model   : $MODEL"
 echo "dataset : $DATASET"
 echo "models  : $MODELS"
-echo "max_docs: ${MAX_DOCS:-<full>}"
+echo "max_docs: ${MAX_DOCS:-<full>}$([ -n "$MAX_DOCS" ] && echo " (random seed $SEED)")"
 echo "endpoint: ${OPENAI_BASE_URL:-<unset>}"
 echo "=============================="
 

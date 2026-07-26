@@ -387,6 +387,7 @@ def generate_silver_dataset(
     heuristic_path: PathLike,
     out_path: PathLike,
     max_docs: int | None = None,
+    seed: int | None = None,
 ) -> pd.DataFrame:
     """Generate and save one Track C silver dataset.
 
@@ -434,6 +435,13 @@ def generate_silver_dataset(
             max_docs,
             len(dataset),
         )
+
+        # With a seed, take a RANDOM subsample (shuffle then take the first
+        # selected_count); without one, keep the original first-N behavior.
+        # Shuffle is an index permutation, so only the selected docs are then
+        # run through the heuristic.
+        if seed is not None:
+            dataset = dataset.shuffle(seed=seed)
 
         dataset = dataset.select(
             range(selected_count)

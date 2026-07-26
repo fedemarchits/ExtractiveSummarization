@@ -88,6 +88,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help=(
+            "If set (with --max-docs), take a RANDOM subsample of that many "
+            "documents using this seed. Omit to take the first --max-docs. "
+            "Same seed + same split => same documents (reproducible, and "
+            "identical across models)."
+        ),
+    )
+
+    parser.add_argument(
         "--overwrite",
         action="store_true",
         help="Overwrite an existing silver parquet file.",
@@ -218,12 +230,16 @@ def main() -> None:
     print(f"[silver] best K: {heuristic['best_k']}")
     print(f"[silver] output: {output_path}")
 
+    if args.seed is not None:
+        print(f"[silver] random subsample seed: {args.seed}")
+
     dataframe = generate_silver_dataset(
         dataset_name=args.dataset,
         split=args.split,
         heuristic_path=heuristic_path,
         out_path=output_path,
         max_docs=args.max_docs,
+        seed=args.seed,
     )
 
     print(

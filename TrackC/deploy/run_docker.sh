@@ -51,6 +51,7 @@ docker run --rm \
     -e DATASET="$DATASET" \
     -e MODELS="$MODELS" \
     -e MAX_DOCS="$MAX_DOCS" \
+    -e SEED="$SEED" \
     -e GENERATE_SILVER="${GENERATE_SILVER:-0}" \
     -e BUILD_RATIONALES="${BUILD_RATIONALES:-0}" \
     -e SKIP_PREFLIGHT="${SKIP_PREFLIGHT:-0}" \
