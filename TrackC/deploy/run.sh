@@ -20,6 +20,12 @@ export TOKENIZERS_PARALLELISM=false
 export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 export HF_HOME="${HF_HOME:-/workspace/.cache/huggingface}"
 export TRANSFORMERS_CACHE="$HF_HOME"
+# CNN/DM downloads fail via HF's xet/CAS backend ("Request failed after N retries");
+# force the standard download path.
+export HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}"
+# Bound slow/throttled endpoint calls (e.g. 397b traces) so they fail fast + retry
+# instead of hanging for minutes.
+export OPENROUTER_TIMEOUT="${OPENROUTER_TIMEOUT:-90}"
 mkdir -p /tmp && chmod 1777 /tmp 2>/dev/null || true
 export TMPDIR=/tmp TEMP=/tmp TMP=/tmp
 
