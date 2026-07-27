@@ -336,8 +336,11 @@ def load_abstractive_dataset(
             "summary",
         )
 
+    # Namespaced repo id: newer huggingface_hub rejects the bare legacy name
+    # "cnn_dailymail" ("Repository id must be 'namespace/name'"). The abisee
+    # mirror is the canonical 3.0.0 dataset with the same article/highlights cols.
     dataset = load_dataset(
-        "cnn_dailymail",
+        "abisee/cnn_dailymail",
         "3.0.0",
         split=split,
     )
