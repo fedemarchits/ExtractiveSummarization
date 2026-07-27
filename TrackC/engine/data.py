@@ -143,18 +143,28 @@ def get_doc_id(doc) -> str:
 def get_source_sentences(doc) -> List[str]:
     sentences = doc["source_sentences"]
 
-    if isinstance(sentences, list):
-        return sentences
-
+    # Serialized list (CSV/JSONL string form).
     if isinstance(sentences, str):
-
         try:
             parsed = json.loads(sentences)
         except Exception:
-            parsed = ast.literal_eval(sentences)
+            try:
+                parsed = ast.literal_eval(sentences)
+            except Exception:
+                parsed = None
 
         if isinstance(parsed, list):
             return [str(s) for s in parsed]
+
+        raise ValueError("source_sentences must be a list or serialized list")
+
+    # Sequence forms returned by pandas/parquet readers (numpy.ndarray,
+    # pandas Series expose .tolist()); mirror normalize_indices' handling.
+    if hasattr(sentences, "tolist"):
+        sentences = sentences.tolist()
+
+    if isinstance(sentences, (list, tuple)):
+        return [str(s) for s in sentences]
 
     raise ValueError("source_sentences must be a list or serialized list")
 
