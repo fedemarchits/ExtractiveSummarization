@@ -166,28 +166,15 @@ def _parse_prediction(
     raw: str,
     n_sentences: int,
 ) -> List[int]:
-    """Parse raw model output into valid unique 1-based sentence indices."""
-    from .postprocess import extract_indices
+    """Parse raw model output into valid unique 1-based sentence indices.
 
-    try:
-        parsed = extract_indices(raw)
-    except Exception:
-        parsed = []
+    Uses the shared postprocess pipeline (robust JSON extraction -> in-range
+    unique sorted indices), the same path the wrapper code uses. No cap here;
+    capped variants are capped later in run_variant.
+    """
+    from .postprocess import parse_selection
 
-    clean: List[int] = []
-    seen = set()
-
-    for value in parsed:
-        try:
-            index = int(value)
-        except (TypeError, ValueError):
-            continue
-
-        if 1 <= index <= n_sentences and index not in seen:
-            clean.append(index)
-            seen.add(index)
-
-    return clean
+    return parse_selection(raw, n_sentences)
 
 
 def _row(
