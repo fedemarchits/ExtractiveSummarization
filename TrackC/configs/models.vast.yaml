@@ -15,7 +15,10 @@ tiers: [small, small_medium, medium, large]
 _vllm_defaults: &vllm_defaults
   backend: vllm
   tensor_parallel_size: 1
-  max_model_len: 8192          # our prompts are ~2-4k tokens; bounds KV cache
+  # XSum/CNN-DM prompts are ~2-4k tokens, but BillSum one-shot prompts reach
+  # ~8k (long bills + a bill exemplar), so 8192 would overflow with the 512
+  # output tokens. 16384 still bounds the KV cache comfortably on a 40GB card.
+  max_model_len: 16384
   gpu_memory_utilization: 0.90
 
 models:
