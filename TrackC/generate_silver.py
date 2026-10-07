@@ -15,6 +15,17 @@ Examples:
         --dataset cnndm \
         --max-docs 100
 
+    # BillSum: derive K first (writes best_heuristic_billsum.json)
+    python -m scripts.compute_k --dataset billsum
+
+    python generate_silver.py --dataset billsum --split test
+
+    python generate_silver.py \
+        --dataset billsum \
+        --split train \
+        --max-docs 100 \
+        --seed 42
+
 The actual heuristic implementation lives in engine/silver.py.
 This script only validates arguments, resolves defaults, and starts generation.
 """
@@ -34,6 +45,15 @@ DEFAULT_OUTPUTS = {
     ("xsum", "validation"): "data/silver/xsum_validation_silver.parquet",
     ("cnndm", "test"): "data/silver/cnndm_silver.parquet",
     ("cnndm", "validation"): "data/silver/cnndm_validation_silver.parquet",
+    ("billsum", "test"): "data/silver/billsum_silver.parquet",
+    ("billsum", "train"): "data/silver/billsum_train_silver.parquet",
+    ("billsum", "ca_test"): "data/silver/billsum_ca_test_silver.parquet",
+}
+
+# Datasets whose K is not Track B's. Must match silver.best_heuristic_path in
+# the dataset's experiment config, so silver labels and the prompt cap agree.
+DEFAULT_HEURISTICS = {
+    "billsum": "best_heuristic_billsum.json",
 }
 
 
@@ -48,24 +68,29 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--dataset",
         required=True,
-        choices=["xsum", "cnndm"],
+        choices=["xsum", "cnndm", "billsum"],
         help="Abstractive dataset to convert into silver extractive labels.",
     )
 
     parser.add_argument(
         "--split",
         default="test",
-        choices=["train", "validation", "test"],
+        choices=["train", "validation", "test", "ca_test"],
         help=(
             "Dataset split to convert. Test is used for evaluation; "
-            "validation may be generated for one-shot exemplars."
+            "XSum/CNN-DM validation or a BillSum train subset may be generated "
+            "for one-shot exemplars."
         ),
     )
 
     parser.add_argument(
         "--heuristic",
-        default="best_heuristic.json",
-        help="Path to the Track B best-heuristic JSON file.",
+        default=None,
+        help=(
+            "Path to the best-heuristic JSON file. Defaults to "
+            "best_heuristic_billsum.json for BillSum (K from "
+            "scripts/compute_k.py) and Track B's best_heuristic.json otherwise."
+        ),
     )
 
     parser.add_argument(
@@ -196,7 +221,10 @@ def main() -> None:
     if args.max_docs is not None and args.max_docs <= 0:
         parser.error("--max-docs must be greater than zero.")
 
-    heuristic_path = Path(args.heuristic)
+    heuristic_path = Path(
+        args.heuristic
+        or DEFAULT_HEURISTICS.get(args.dataset, "best_heuristic.json")
+    )
     heuristic = validate_heuristic(heuristic_path)
 
     output_path = resolve_output_path(

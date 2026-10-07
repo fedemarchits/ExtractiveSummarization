@@ -13,6 +13,10 @@ Examples:
         --model qwen35_4b \
         --dataset cnndm
 
+    python run.py \
+        --model qwen35_4b \
+        --dataset billsum
+
 Configuration is read from configs/*.yaml.
 
 Benchmark runs are resume-safe: if a variant JSONL file already exists,
@@ -30,6 +34,7 @@ from pathlib import Path
 EXPERIMENT_CONFIGS = {
     "xsum": "configs/experiment_xsum.yaml",
     "cnndm": "configs/experiment_cnndm.yaml",
+    "billsum": "configs/experiment_billsum.yaml",
 }
 
 
@@ -55,7 +60,7 @@ def build_parser() -> argparse.ArgumentParser:
         choices=sorted(EXPERIMENT_CONFIGS),
         help=(
             "Dataset configuration to use. Required when --model is supplied. "
-            "Choices: xsum or cnndm."
+            "Choices: xsum, cnndm, or billsum."
         ),
     )
 

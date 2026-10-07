@@ -10,6 +10,10 @@ Examples:
         --dataset cnndm \
         --model qwen35_397b
 
+    python -m scripts.build_rationales \
+        --dataset billsum \
+        --model qwen35_397b
+
 The script:
 
 1. loads a validation silver dataset;
@@ -58,6 +62,7 @@ def _experiment_path(dataset: str) -> Path:
     mapping = {
         "xsum": Path("configs/experiment_xsum.yaml"),
         "cnndm": Path("configs/experiment_cnndm.yaml"),
+        "billsum": Path("configs/experiment_billsum.yaml"),
     }
 
     try:
@@ -325,7 +330,7 @@ def main() -> None:
     parser.add_argument(
         "--dataset",
         required=True,
-        choices=["xsum", "cnndm"],
+        choices=["xsum", "cnndm", "billsum"],
     )
 
     parser.add_argument(

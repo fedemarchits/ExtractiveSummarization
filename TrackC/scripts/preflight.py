@@ -30,6 +30,7 @@ import yaml
 EXPERIMENT_CONFIGS = {
     "xsum": "configs/experiment_xsum.yaml",
     "cnndm": "configs/experiment_cnndm.yaml",
+    "billsum": "configs/experiment_billsum.yaml",
 }
 
 # Techniques that require a prebuilt reasoning-trace cache. Kept explicit so the
@@ -88,6 +89,12 @@ def _model_backend(models_path: str, alias: str):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", required=True, choices=sorted(EXPERIMENT_CONFIGS))
+    ap.add_argument(
+        "--prompt-set",
+        choices=["original", "billsum"],
+        default="original",
+        help="Use the original Track C prompts or the BillSum-oriented prompt set.",
+    )
     ap.add_argument("--model", required=True)
     ap.add_argument("--models", default="configs/models.vast.yaml")
     ap.add_argument("--grid", default="configs/grid.yaml")
@@ -96,7 +103,13 @@ def main() -> None:
     errors: list[str] = []
     warns: list[str] = []
 
-    exp = yaml.safe_load(open(EXPERIMENT_CONFIGS[args.dataset]))
+    experiment_path = EXPERIMENT_CONFIGS[args.dataset]
+    if args.prompt_set == "billsum":
+        if args.dataset != "billsum":
+            ap.error("--prompt-set billsum is only supported with --dataset billsum")
+        experiment_path = "configs/experiment_billsum_updated_prompts.yaml"
+
+    exp = yaml.safe_load(open(experiment_path))
     ds = exp.get("dataset", {})
     silver = ds.get("silver_path")
     val_silver = ds.get("train_silver_path")
@@ -113,10 +126,12 @@ def main() -> None:
     # 2. validation silver (only if one-shot variants run)
     if one_shot:
         if not val_silver or not Path(val_silver).exists():
+            exemplar_split = "train" if args.dataset == "billsum" else "validation"
             errors.append(
-                f"one-shot variants are enabled but validation silver is missing: {val_silver!r}\n"
+                f"one-shot variants are enabled but exemplar silver is missing: {val_silver!r}\n"
                 f"    (runner.py raises RuntimeError on one-shot without it)\n"
-                f"    fix: python generate_silver.py --dataset {args.dataset} --split validation [--max-docs N]"
+                f"    fix: python generate_silver.py --dataset {args.dataset} --split {exemplar_split} "
+                f"--max-docs 100 --seed 42"
             )
 
     # 3. rationale cache (only if _trace variants run)
@@ -129,7 +144,13 @@ def main() -> None:
             errors.append(
                 f"_trace variants are enabled but the rationale cache is empty: {cache_dir!r}\n"
                 f"    (prompts/shared.py raises FileNotFoundError otherwise)\n"
-                f"    fix A: python -m scripts.build_rationales --dataset {args.dataset} --models {args.models}   (needs OPENAI_*)\n"
+                f"    fix A: "
+                + (
+                    f"python -m scripts.build_rationales_billsum_prompts --dataset {args.dataset} --models {args.models}"
+                    if args.prompt_set == "billsum"
+                    else f"python -m scripts.build_rationales --dataset {args.dataset} --models {args.models}"
+                )
+                + "   (needs OPENAI_*)\n"
                 f"    fix B: set every *_trace technique to [] in {args.grid} to skip them"
             )
 

@@ -1,0 +1,43 @@
+# Track C experiment settings - BillSum (BillSum-oriented prompt wording)
+
+dataset:
+  name: billsum
+  silver_path: data/silver/billsum_silver.parquet
+  train_silver_path: data/silver/billsum_train_silver.parquet
+
+silver:
+  # K derived from the BillSum compression ratio (scripts/compute_k.py),
+  # not Track B's ACLSum value.
+  best_heuristic_path: best_heuristic_billsum.json
+
+fewshot:
+  enabled: true
+  shots_dir: data/shots
+  n_shots: 1
+  seed: 42
+
+rationale:
+  source_model: qwen35_397b
+  cache_dir: data/shots/rationales/billsum_updated
+  max_exemplar_tries: 10
+  max_new_tokens: 1024
+  accept_f1: 0.7
+  min_f1: 0.4
+
+inference:
+  max_new_tokens: 512
+  temperature: 0.0
+  seed: 42
+
+self_consistency:
+  enabled: false
+  n_samples: 5
+  temperature: 0.7
+
+dynamic_capper:
+  enabled: false
+
+output:
+  # Separate directory prevents resume/output collisions with the original prompts.
+  results_dir: results_updated_prompts
+  resume: true

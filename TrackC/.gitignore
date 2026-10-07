@@ -7,3 +7,5 @@ results/**/*.jsonl.partial
 data/cache/
 data/silver/*.parquet
 .DS_Store
+results_updated_prompts/**/*.jsonl
+results_updated_prompts/**/*.jsonl.partial

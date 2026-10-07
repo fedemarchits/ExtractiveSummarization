@@ -175,11 +175,26 @@ def build_table11(
 def build_ablation_tables(
     results_dir: str = "results",
     output_dir: str = "tables",
+    dataset: str | None = None,
+    model: str = "qwen35_4b",
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Build Tables 10 and 11.
+
+    By default Table 10 uses XSum and Table 11 CNN/DailyMail. Pass ``dataset``
+    to build both on one dataset instead, e.g. for a BillSum-only results tree.
+    """
     df = load_all_results(results_dir)
 
-    table10 = build_table10(df)
-    table11 = build_table11(df)
+    table10 = build_table10(
+        df,
+        dataset=dataset or "xsum",
+        model=model,
+    )
+    table11 = build_table11(
+        df,
+        dataset=dataset or "cnndm",
+        model=model,
+    )
 
     output_root = Path(output_dir)
     output_root.mkdir(

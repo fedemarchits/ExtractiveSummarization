@@ -4,12 +4,13 @@
 #
 # Required env:
 #   MODEL=<alias>        e.g. qwen35_9b   (must exist in $MODELS)
-#   DATASET=xsum|cnndm
+#   DATASET=xsum|cnndm|billsum
 # Optional env:
 #   MODELS=configs/models.vast.yaml   default; vllm local tiers (fast on A100)
 #   MAX_DOCS=<n>                       subsample size for silver gen (unset = full ~11k)
 #   GENERATE_SILVER=1                 (re)generate silver even if it already exists
 #   BUILD_RATIONALES=1                build the _trace rationale cache (needs OPENAI_* + credit)
+#   PROMPT_SET=original|billsum       BillSum only; default original
 #   SKIP_PREFLIGHT=1                  bypass the safety check (not recommended)
 #
 # Results -> results/<dataset>/<model>/<variant>.jsonl  (resume-safe).
@@ -33,14 +34,21 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 : "${MODEL:?set MODEL=<alias> (see configs/models.vast.yaml)}"
-: "${DATASET:?set DATASET=xsum or cnndm}"
+: "${DATASET:?set DATASET=xsum, cnndm, or billsum}"
 MODELS="${MODELS:-configs/models.vast.yaml}"
+PROMPT_SET="${PROMPT_SET:-original}"
 
 case "$DATASET" in
-  xsum)  SILVER="data/silver/xsum_silver.parquet";  VAL_SILVER="data/silver/xsum_validation_silver.parquet";;
-  cnndm) SILVER="data/silver/cnndm_silver.parquet"; VAL_SILVER="data/silver/cnndm_validation_silver.parquet";;
-  *) echo "DATASET must be xsum or cnndm, got '$DATASET'"; exit 2;;
+  xsum)  SILVER="data/silver/xsum_silver.parquet";  VAL_SILVER="data/silver/xsum_validation_silver.parquet"; EXEMPLAR_SPLIT="validation";;
+  cnndm) SILVER="data/silver/cnndm_silver.parquet"; VAL_SILVER="data/silver/cnndm_validation_silver.parquet"; EXEMPLAR_SPLIT="validation";;
+  billsum) SILVER="data/silver/billsum_silver.parquet"; VAL_SILVER="data/silver/billsum_train_silver.parquet"; EXEMPLAR_SPLIT="train";;
+  *) echo "DATASET must be xsum, cnndm, or billsum, got '$DATASET'"; exit 2;;
 esac
+
+if [ "$PROMPT_SET" = "billsum" ] && [ "$DATASET" != "billsum" ]; then
+    echo "PROMPT_SET=billsum is only valid with DATASET=billsum"
+    exit 2
+fi
 
 # Random subsample: with MAX_DOCS set, take a reproducible random sample (SEED,
 # default 42) so all models see the SAME documents. Unset MAX_DOCS = full split.
@@ -55,6 +63,7 @@ echo "Track C run"
 echo "model   : $MODEL"
 echo "dataset : $DATASET"
 echo "models  : $MODELS"
+echo "prompts : $PROMPT_SET"
 echo "max_docs: ${MAX_DOCS:-<full>}$([ -n "$MAX_DOCS" ] && echo " (random seed $SEED)")"
 echo "endpoint: ${OPENAI_BASE_URL:-<unset>}"
 echo "=============================="
@@ -68,20 +77,28 @@ if [ "${GENERATE_SILVER:-0}" = "1" ] || [ ! -f "$SILVER" ]; then
     python -u generate_silver.py --dataset "$DATASET" $MAXDOCS_ARG
 fi
 if [ "${GENERATE_SILVER:-0}" = "1" ] || [ ! -f "$VAL_SILVER" ]; then
-    echo ">> generating silver: $DATASET validation $MAXDOCS_ARG"
-    python -u generate_silver.py --dataset "$DATASET" --split validation $MAXDOCS_ARG
+    echo ">> generating silver: $DATASET $EXEMPLAR_SPLIT $MAXDOCS_ARG"
+    python -u generate_silver.py --dataset "$DATASET" --split "$EXEMPLAR_SPLIT" $MAXDOCS_ARG
 fi
 
 # --- rationale cache for _trace variants (optional; needs OPENAI_* + credit) ---
 if [ "${BUILD_RATIONALES:-0}" = "1" ]; then
     echo ">> building reasoning traces ($DATASET)"
-    python -u -m scripts.build_rationales --dataset "$DATASET" --models "$MODELS"
+    if [ "$PROMPT_SET" = "billsum" ]; then
+        python -u -m scripts.build_rationales_billsum_prompts --dataset "$DATASET" --models "$MODELS"
+    else
+        python -u -m scripts.build_rationales --dataset "$DATASET" --models "$MODELS"
+    fi
 fi
 
 # --- preflight: fail fast before loading a model / burning GPU time ---
 if [ "${SKIP_PREFLIGHT:-0}" != "1" ]; then
-    python scripts/preflight.py --dataset "$DATASET" --model "$MODEL" --models "$MODELS"
+    python scripts/preflight.py --dataset "$DATASET" --prompt-set "$PROMPT_SET" --model "$MODEL" --models "$MODELS"
 fi
 
 # --- run ---
-python -u run.py --model "$MODEL" --dataset "$DATASET" --models "$MODELS"
+if [ "$PROMPT_SET" = "billsum" ]; then
+    python -u run_billsum_prompts.py --model "$MODEL" --dataset "$DATASET" --models "$MODELS"
+else
+    python -u run.py --model "$MODEL" --dataset "$DATASET" --models "$MODELS"
+fi
